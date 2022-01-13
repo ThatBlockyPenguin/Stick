@@ -126,12 +126,3 @@ class Defaults {
 }
 
 export default Logger;
-
-
-
-
-const l = new Logger.Builder().setFile('C:/Users/1pebb/Desktop/logtest/myfile.txt').build();
-
-l.info('ahhhh')
-l.debug('ohhhhhh')
-l.error('AHHHHH');
