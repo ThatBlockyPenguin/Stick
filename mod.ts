@@ -1,10 +1,12 @@
 // deno-lint-ignore-file no-namespace
+import { ensureFileSync } from 'https://deno.land/std/fs/ensure_file.ts';
+
 type Label = string | (() => string);
 
 class Logger {
   private readonly label: () => string;
 
-  constructor(public readonly level = Defaults.level, label: Label = Defaults.label, public readonly name?: string) {
+  constructor(public readonly level = Defaults.level, label: Label = Defaults.label, public readonly name?: string, public readonly file?: string) {
     if(!(label instanceof Function))
       this.label = () => label;
     else
@@ -14,19 +16,27 @@ class Logger {
   public log(level: Logger.LogLevel, msg: string): boolean {
     const logIt = level <= this.level;
 
-    if(logIt)
-      Deno.stdout.writeSync(
-        new TextEncoder().encode(
-          // Label
-          '[' + this.label() + '] ' +
-          // Name (if any)
-          (this.name === undefined ? '' : '[' + this.name + '] ') +
-          // Level
-          '[' + Logger.LogLevel[level] + '] ' +
-          // Message
-          msg
-        )
+    if(logIt) {
+      const log = new TextEncoder().encode(
+        // Label
+        '[' + this.label() + '] ' +
+        // Name (if any)
+        (this.name === undefined ? '' : '[' + this.name + '] ') +
+        // Level
+        '[' + Logger.LogLevel[level] + '] ' +
+        // Message
+        msg + '\n'
       );
+
+      Deno.stdout.writeSync(log);
+
+      if(this.file !== undefined) {
+        ensureFileSync(this.file);
+        const file = Deno.openSync(this.file, { create: true, append: true });
+        file.writeSync(log);
+        file.close();
+      }
+    }
       
     return logIt;
   }
@@ -76,6 +86,7 @@ namespace Logger {
     private label: Label = Defaults.label;
     private level: Logger.LogLevel = Defaults.level;
     private name: string | undefined = undefined;
+    private file: string | undefined = undefined;
 
     public setLabel(label: Label): this {
 
@@ -93,8 +104,13 @@ namespace Logger {
       return this;
     }
 
+    public setFile(file: string): this {
+      this.file = file;
+      return this;
+    }
+
     public build(): Logger {
-      return new Logger(this.level, this.label, this.name);
+      return new Logger(this.level, this.label, this.name, this.file);
     }
   }
 }
@@ -105,3 +121,12 @@ class Defaults {
 }
 
 export default Logger;
+
+
+
+
+const l = new Logger.Builder().setFile('C:/Users/1pebb/Desktop/logtest/myfile.txt').build();
+
+l.info('ahhhh')
+l.debug('ohhhhhh')
+l.error('AHHHHH');
