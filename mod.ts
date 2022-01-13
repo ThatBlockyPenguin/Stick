@@ -41,7 +41,12 @@ class Logger {
     return logIt;
   }
 
-  public error(msg: string): boolean {
+  public error(msg: string | Error): boolean {
+    if(msg instanceof Error) {
+      this.log(Logger.LogLevel.ERROR, 'ERROR!');
+      throw msg;
+    }
+    
     return this.log(Logger.LogLevel.ERROR, msg);
   }
 
