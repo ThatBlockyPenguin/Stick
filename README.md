@@ -16,8 +16,10 @@ The output format is "[label] [name] [level] message". Note that `name` is optio
 
 `Logger` can also take parameters:
 ```js
-Logger(level: Logger.LogLevel, label: string | () => string, name: string)
+Logger(level: Logger.LogLevel, label: string | () => string, name: string, file: string)
 ```
+By default, Loggers do not log to a file, however, you can enable this by specifying a file in the `file` parameter.
+
 However, an easier way to create a `Logger` instance is to use the Builder:
 
 ## Logger.Builder
@@ -25,7 +27,7 @@ However, an easier way to create a `Logger` instance is to use the Builder:
 new Logger.Builder().setName('Process XYZ').build();
 ```
 
-`Logger.Builder` has a few functions you can use: `setName`, `setLevel`, and `setLabel`. Once you have set everything you need, call `build` to receive a new `Logger`.
+`Logger.Builder` has a few functions you can use: `setName`, `setLevel`, `setLabel`, and `setFile`. Once you have set everything you need, call `build` to receive a new `Logger`.
 
 ## Logger.LogLevel
 `LogLevel`s are how Stick determines what messages get logged. The current available levels are:
