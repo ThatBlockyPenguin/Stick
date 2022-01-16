@@ -1,5 +1,6 @@
 // deno-lint-ignore-file no-namespace
 import { ensureFileSync } from 'https://deno.land/std/fs/ensure_file.ts';
+import * as colours from "https://deno.land/std@0.121.0/fmt/colors.ts";
 
 type Label = string | (() => string);
 
@@ -7,7 +8,7 @@ class Logger {
   private readonly label: () => string;
 
   constructor(public readonly level = Defaults.level, label: Label = Defaults.label, public readonly name?: string, public readonly file?: string) {
-    if(!(label instanceof Function))
+    if (!(label instanceof Function))
       this.label = () => label;
     else
       this.label = label;
@@ -16,38 +17,40 @@ class Logger {
   public log(level: Logger.LogLevel, msg: string): boolean {
     const logIt = level <= this.level;
 
-    if(logIt) {
+    if (logIt) {
       const log = new TextEncoder().encode(
-        // Label
-        '[' + this.label() + '] ' +
-        // Name (if any)
-        (this.name === undefined ? '' : '[' + this.name + '] ') +
-        // Level
-        '[' + Logger.LogLevel[level] + '] ' +
-        // Message
-        msg + '\n'
+        Logger.LogLevel.colourOf(level)(
+          // Label
+          '[' + this.label() + '] ' +
+          // Name (if any)
+          (this.name === undefined ? '' : '[' + this.name + '] ') +
+          // Level
+          '[' + Logger.LogLevel[level] + '] ' +
+          // Message
+          msg + '\n'
+        )
       );
 
       Deno.stdout.writeSync(log);
 
-      if(this.file !== undefined) {
+      if (this.file !== undefined) {
         ensureFileSync(this.file);
         const file = Deno.openSync(this.file, { create: true, append: true });
         file.writeSync(log);
         file.close();
       }
     }
-      
+
     return logIt;
   }
 
-  public error(msg: string | Error): boolean {
-    if(msg instanceof Error) {
-      this.log(Logger.LogLevel.ERROR, 'ERROR!');
-      throw msg;
-    }
-    
-    return this.log(Logger.LogLevel.ERROR, msg);
+  public error(msg: string, throws = false): boolean {
+    const result = this.log(Logger.LogLevel.ERROR, msg);
+
+    if(throws)
+      Deno.exit(-1);
+
+    return result;
   }
 
   public warning(msg: string): boolean {
@@ -78,6 +81,21 @@ namespace Logger {
     INFO,
     /** Use when logging information for debugging purposes. Level 3 */
     DEBUG
+  }
+
+  export namespace LogLevel {
+    export function colourOf(level: LogLevel) {
+      switch (level) {
+        case LogLevel.ERROR:
+          return colours.brightRed;
+        case LogLevel.WARNING:
+          return colours.yellow;
+        case LogLevel.INFO:
+          return colours.reset;
+        case LogLevel.DEBUG:
+        return colours.brightCyan;
+      }
+    }
   }
 
   export const Labels = {
