@@ -1,3 +1,8 @@
+> [!WARNING]
+> **Stick is no longer under development!**
+> 
+> This project is abandonware, and has been re-licenced under the BSD Zero Clause License (`0BSD`).
+
 # Stick
 Stick is a tiny logger for Deno.
 
